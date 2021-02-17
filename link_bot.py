@@ -55,40 +55,40 @@ def login(portal):
     
     time.sleep(1)
     driver.find_element_by_id("Submit").click()
-    time.sleep(5)
+    
 
 
     # Enter into G-learn 
     
 
-    element = None
+    timetable_btn = None
     while True:
         try:
             if portal == 'glearn':
                 if ("https://login.gitam.edu/studentapps.aspx" in driver.current_url):
-                    driver.find_element_by_link_text("G-Learn").click()
-                time.sleep(60)
-                element = driver.find_element_by_xpath("//div[@id='ContentPlaceHolder1_divlblonline']")
-                time.sleep(1) 
-                element.location_once_scrolled_into_view
+                    glearn_btn = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "G-Learn")))
+                    glearn_btn.click()
+                    
+                class_table = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,"//div[@id='ContentPlaceHolder1_divlblonline']")))
+                class_table.location_once_scrolled_into_view
                 # Maybe not required
-                if not(type(element) == type(None)):
+                if not(type(class_table) == type(None)):
                     break
 
-            if portal == 'student':
+            if portal == 'student_timetable':
                 if ("https://login.gitam.edu/studentapps.aspx" in driver.current_url):
-                    driver.find_element_by_link_text("Student portal").click()
-                time.sleep(5)
-                element = driver.find_element_by_link_text("My timetable")
-                time.sleep(5) 
-                element.location_once_scrolled_into_view
-                # Maybe not required
-                if not(type(element) == type(None)):
-                    element.click()
+                    glearn_btn = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "G-Learn")))
+                    glearn_btn.click()
+
+                timetable_btn = WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.LINK_TEXT, "My timetable")))
+                timetable_btn.location_once_scrolled_into_view
+
+                if not(type(timetable_btn) == type(None)):
+                    timetable_btn.click()
                     break
 
         except:
-            if count>10:
+            if count>15:
                 print('Looks like G-learn is down') 
 
                 # G-learn down send msg to discord
@@ -143,10 +143,12 @@ def fetch_link(class_name,start_time,end_time):
     try:
         driver.refresh()
         time.sleep(10)
-        if not("http://glearn.gitam.edu/student/welcome.aspx" in driver.current_url):
+        glearn_url = 'http://glearn.gitam.edu/student/welcome.aspx'
+        if not((glearn_url).lower() == (driver.current_url).lower()):
+            print('glearn not loaded')
             login('glearn')
-    	    
-    		
+
+
 
     except:
         driver.close()
@@ -160,13 +162,17 @@ def fetch_link(class_name,start_time,end_time):
     check = False
 
     while True:
-
-        classes_available = driver.find_elements_by_xpath("//table[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr") # List is created
+        
+        # List is created
+        classes_available = driver.find_elements_by_xpath("//table[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr") 
 
         for i in range(len(classes_available)):
 
-            x_path1 = f"//*[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr[{i+1}]/td/a/div/h4" # Class name
-            x_path2 = f"//table[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr[{i+1}]/td/a/div/h6" # date and time 
+            # Class name
+            x_path1 = f"//*[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr[{i+1}]/td/a/div/h4" 
+
+            # date and time 
+            x_path2 = f"//table[@id='ContentPlaceHolder1_GridViewonline']/tbody/tr[{i+1}]/td/a/div/h6" 
 
             className = driver.find_element_by_xpath(x_path1).text
             date_time = driver.find_element_by_xpath(x_path2).text
@@ -183,7 +189,6 @@ def fetch_link(class_name,start_time,end_time):
             # Extract Date
             dat = date_time.split(':')
             dat = dat[1]
-
 
 
 
@@ -229,33 +234,35 @@ def fetch_link(class_name,start_time,end_time):
 
 def sched():
 
+    # Start browser
+    print('browser started')
     global driver
     driver = webdriver.Chrome(ChromeDriverManager().install(),options=opt,service_log_path='NUL')
     driver.get(URL)
     WebDriverWait(driver,10000).until(EC.visibility_of_element_located((By.TAG_NAME,'body')))
 
-    login('student')
+    login('student_timetable')
 
     # Schedule all classes
-    timetable = driver.find_elements_by_xpath("//table[@id='MainContent_grd1']/tbody/tr")
-
+    timetable = driver.find_elements_by_xpath("//table[@id='ContentPlaceHolder1_grd1']/tbody/tr") 
+    columns = timetable[0].find_elements_by_tag_name('th')
 
     for i in range(len(timetable)+1):
 
 
-        for j in range(2,12):
+        for j in range(2,len(columns)):
 
             if i>1:
 
-                class_name_xpath = f"//table[@id='MainContent_grd1']/tbody/tr[{i}]/td[{j}]"
+                class_name_xpath = f"//table[@id='ContentPlaceHolder1_grd1']/tbody/tr[{i}]/td[{j}]"
                 class_name = driver.find_element_by_xpath(class_name_xpath).text
                 if not class_name == "":
 
                     
-                    day_xpath = f"//table[@id='MainContent_grd1']/tbody/tr[{i}]/td[{1}]"
+                    day_xpath = f"//table[@id='ContentPlaceHolder1_grd1']/tbody/tr[{i}]/td[{1}]"
                     day = driver.find_element_by_xpath(day_xpath).text
 
-                    timings_xpath = f"//table[@id='MainContent_grd1']/tbody/tr[{1}]/th[{j}]"
+                    timings_xpath = f"//table[@id='ContentPlaceHolder1_grd1']/tbody/tr[{1}]/th[{j}]"
                     timings = driver.find_element_by_xpath(timings_xpath).text
                     timings_split = timings.split('to')
                     start_time = timings_split[0].strip()
@@ -293,17 +300,41 @@ def sched():
                         print(f"Scheduled class {class_name} on {day} at {start_time}")
 
 
+
                 else:
                     continue
 
-    
-    driver.close()
-    print('Browser closed')
-    time.sleep(5)
+
+    print('All Classes are Scheduled')
 
 
-    # Start browser
-    start_browser()
+    count = 0
+    while True:
+
+        try:
+            back_btn = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,"//div[@class='col-md-12']//img[1]")))
+            back_btn.click()
+            class_table = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,"//div[@id='ContentPlaceHolder1_divlblonline']")))
+            class_table.location_once_scrolled_into_view
+            if not(type(class_table) == type(None)):
+                break
+
+        except:
+            if count>15:
+                print('Looks like G-learn is down') 
+
+                # G-learn down send msg to discord
+                discord_webhook.send_msg(class_name='-',link='-',status="G-learn down",date='-',start_time='-',end_time='-')
+                break
+            time.sleep(15)
+            print("trying again")
+            count = count+1
+            driver.refresh()
+
+
+
+
+
     while True:
         # Checks whether a scheduled task is pending to run or not
         schedule.run_pending()
