@@ -136,9 +136,6 @@ def convert_time(timing):
 def fetch_link(class_name,start_time,end_time):
     global driver
     
-    #time.sleep(10)
-    #driver.refresh()
-    #time.sleep(10)
 
     try:
         driver.refresh()
@@ -156,8 +153,10 @@ def fetch_link(class_name,start_time,end_time):
         print('Browser closed, opening again')
         start_browser()
 
-    
-    today_date = date.today() # Today's date
+    # Today's date
+    today_date = date.today() 
+    # Today's date converted to string
+    date_string = today_date.strftime("%d-%b-%Y")
     count = 0
     check = False
 
@@ -186,14 +185,16 @@ def fetch_link(class_name,start_time,end_time):
             class_date = (temp[2].split("-"))[0]
             class_date = int(class_date)
 
-            # Extract Date
-            dat = date_time.split(':')
-            dat = dat[1]
+            
 
 
 
 
             if start_time == converted_time and today_date.day == class_date:
+                
+                # Extract Date
+                dat = date_time.split(':')
+                dat = dat[1]
 
                 check = True
 
@@ -213,7 +214,7 @@ def fetch_link(class_name,start_time,end_time):
                 print("No class")
 
                 # NO class send msg to discord
-                discord_webhook.send_msg(class_name=class_name,link='-',status="noclass",date=dat,start_time=start_time,end_time=end_time)
+                discord_webhook.send_msg(class_name=class_name,link='-',status="noclass",date=date_string,start_time=start_time,end_time=end_time)
                 return
 
             print("Class not found, trying again")
@@ -305,7 +306,7 @@ def sched():
                     continue
 
 
-    print('All Classes are Scheduled')
+    print('All classes are fetched')
 
 
     count = 0
