@@ -10,7 +10,7 @@ to the discord server according to the timetable.
   - Chrome runs in *headless mode* so no distractions.
 
 ### Setup & Run :rocket:
-- Enter your G-learn credentials and Discord webhook url in **keys.env** file.
+- Enter your G-learn credentials and [Discord webhook url](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) in **keys.env** file.
 ```
  USER_ID=
  PASSWORD=
